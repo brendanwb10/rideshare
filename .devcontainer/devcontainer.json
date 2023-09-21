@@ -18,7 +18,7 @@
 	// "forwardPorts": [3000, 5432],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "bundle config set path 'vendor/bundle' && bundle install && bin/rails db:create && bin/rails db:migrate",
+	"postCreateCommand": "sudo apt update -y && sudo apt -y install graphviz && bundle config set path 'vendor/bundle' && bundle install && bin/rails db:create && bin/rails db:migrate",
     // Install Graphiz
 	// TODO: Figure out how to get around the Y prompt so this can be part of the postCreateCommand
 	// sudo apt update && sudo apt install graphviz
