@@ -1,27 +1,32 @@
+#
+# Configuring Active Record:
+# <https://guides.rubyonrails.org/configuring.html#configuring-active-record>
+#
+# Database Connection Control Functions
+# <https://www.postgresql.org/docs/current/libpq-connect.html>
+#
 default: &default
   adapter: postgresql
-  username: postgres
-  password: postgres
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  timeout: 5000
+  schema_search_path: rideshare
+  prepared_statements: true # enabled by default
+  advisory_locks: true # enabled by default
+  # Optional (PostgreSQL):
+  # checkout_timeout, read_timeout
 
-development:
-  host: localhost
-  <<: *default
-  database: rideshare_development
-  variables:
-    statement_timeout: 5000
-
-# Warning: The database defined as "test" will be erased and
-# re-generated from your development database when you run "rake".
-# Do not set this db to the same as development or production.
 test:
   <<: *default
-  host: localhost
-  database: rideshare_test
+  url: postgresql://postgres:@localhost/rideshare_test
 
-production:
+development:
   <<: *default
-  database: rideshare_production
+  url: <%= ENV['DATABASE_URL'] %>
+  database: rideshare_development
   variables:
-    statement_timeout: 5000
+    # https://www.postgresql.org/docs/current/runtime-config-client.html
+    statement_timeout: 20000 # (in seconds, consider lowering to 5s for OLTP)
+    idle_in_transaction_session_timeout: 300000 # milliseconds
+    # Consider setting all these params:
+    # idle_timeout
+    # lock_timeout
+    # idle_session_timeout

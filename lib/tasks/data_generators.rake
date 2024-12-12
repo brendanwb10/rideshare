@@ -9,16 +9,21 @@ namespace :data_generators do
           batch = group.map do |i|
             first_name = Faker::Name.first_name
             last_name = Faker::Name.last_name
-            Driver.new(
+            drivers_license_number = if klass.equal?(Driver)
+              random_mn_drivers_license_number(first_name, i)
+            end
+            klass.new(
               first_name: first_name,
               last_name: last_name,
               email: "#{first_name}-#{last_name}-#{klass.name.downcase}-#{i}@email.com",
-              password_digest: SecureRandom.hex
+              password_digest: SecureRandom.hex,
+              drivers_license_number: drivers_license_number
             )
           end.map do |d|
             d.attributes.symbolize_keys.slice(
               :first_name, :last_name,
-              :email, :password, :type
+              :email, :password, :type,
+              :drivers_license_number
             )
           end
 
@@ -35,13 +40,8 @@ namespace :data_generators do
     100.times do |i|
       fname = Faker::Name.first_name
       lname = Faker::Name.last_name
-      rand_1 = (rand * 10).to_i
-      rand_2 = (rand * 10).to_i
-      rand_3 = (rand * 10).to_i
-      rand_4 = (rand * 10).to_i
-      rand_5 = (rand * 10).to_i
 
-      drivers_license_number = random_mn_drivers_license_number(fname, rand_1, rand_2, rand_3, rand_4, rand_5, i)
+      drivers_license_number = random_mn_drivers_license_number(fname, i)
       drivers << Driver.create!(
         first_name: fname,
         last_name: lname,
@@ -66,15 +66,15 @@ namespace :data_generators do
     nyc = Location.where(
       address: "New York, NY",
     ).first_or_create do |loc|
-      loc.latitude = 40.7143528,
-      loc.longitude = -74.0059731
+      loc.position = "(40.7143528,-74.0059731)"
+      loc.state = "NY"
     end
 
     bos = Location.where(
       address: "Boston, MA",
     ).first_or_create do |loc|
-      loc.latitude = 42.361145
-      loc.longitude = -71.057083
+      loc.position = "(42.361145,-71.057083)"
+      loc.state = "MA"
     end
 
     puts "creating Trip Requests and Trips"
@@ -113,15 +113,13 @@ namespace :data_generators do
     nyc = Location.where(
       address: "New York, NY",
     ).first_or_create do |loc|
-      loc.latitude = 40.7143528,
-      loc.longitude = -74.0059731
+      loc.position = "(40.7143528,-74.0059731)"
     end
 
     bos = Location.where(
       address: "Boston, MA",
     ).first_or_create do |loc|
-      loc.latitude = 42.361145
-      loc.longitude = -71.057083
+      loc.position = "(42.361145,-71.057083)"
     end
 
     puts "creating trip requests and trips"
@@ -223,24 +221,33 @@ namespace :data_generators do
     puts "Created #{TripPosition.count} records."
   end
 
+  desc "Run ANALYZE on all involved tables"
+  task analyze_tables: :environment do |t, args|
+    %w( users trips trip_requests trip_positions
+        locations vehicles vehicle_reservations ).each do |table_name|
+      ActiveRecord::Base.connection.execute("ANALYZE #{table_name}")
+    end
+  end
+
   desc "Generate All Data"
   task generate_all: :environment do |t, args|
     Rake::Task["data_generators:drivers_and_riders"].invoke
     Rake::Task["data_generators:trips_and_requests"].invoke
     Rake::Task["data_generators:vehicles_and_reservations"].invoke
     Rake::Task["data_generators:generate_trip_positions"].invoke
+    Rake::Task["data_generators:analyze_tables"].invoke
   end
 end
 
-def random_mn_drivers_license_number(fname, rand_1, rand_2, rand_3, rand_4, rand_5, i)
+def random_mn_drivers_license_number(fname, i)
   [
     "#{fname.first.upcase}",
     "800000",
-    rand_1.to_s,
-    rand_2.to_s,
-    rand_3.to_s,
-    rand_4.to_s,
-    rand_5.to_s,
+    (rand * 10).to_i.to_s,
+    (rand * 10).to_i.to_s,
+    (rand * 10).to_i.to_s,
+    (rand * 10).to_i.to_s,
+    (rand * 10).to_i.to_s,
     "#{i}"
   ].join
 end

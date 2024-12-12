@@ -25,7 +25,7 @@ Bundler.require(*Rails.groups)
 module Rideshare
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 7.0
+    config.load_defaults 7.1
 
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration can go into files in config/initializers
@@ -47,9 +47,23 @@ module Rideshare
     config.time_zone = 'Central Time (US & Canada)'
 
     # Enable Query Logging
-    config.active_record.query_log_tags_enabled = true
+    # NOTE: Disable in order to use Prepared Statements
+    # config.active_record.query_log_tags_enabled = true
 
     # https://www.bigbinary.com/blog/rails-7-adds-setting-for-enumerating-columns-in-select-statements#
-    config.active_record.enumerate_columns_in_select_statements = true
+    # config.active_record.enumerate_columns_in_select_statements = true
+
+    # Add '--if-exists' flag to pg_dump
+    # https://github.com/rails/rails/issues/38695#issuecomment-763588402
+    ActiveRecord::Tasks::DatabaseTasks.structure_dump_flags = ['--clean', '--if-exists']
+
+    # Consider limiting the conversion of timestamp without time zone columns to UTC
+    # https://engineering.ezcater.com/youre-not-in-the-zone
+    # ActiveRecord::Base.time_zone_aware_types = [:datetime]
+
+    # Consider timestamps in the local time zone
+    # This is because the app used "timestamp without time zone" columns and times are
+    # stored in the local timezone (CST).
+    config.active_record.default_timezone = :local
   end
 end

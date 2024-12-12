@@ -1,3 +1,0 @@
-DROP TABLE users_copy CASCADE;
-
-CREATE TABLE users_copy (LIKE users INCLUDING ALL);

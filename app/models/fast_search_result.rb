@@ -1,5 +1,4 @@
 class FastSearchResult < ApplicationRecord
-  belongs_to :searchable, polymorphic: true
 
   # this isn't strictly necessary, but it will prevent
   # rails from calling save, which would fail anyway.
@@ -7,10 +6,10 @@ class FastSearchResult < ApplicationRecord
     true
   end
 
-  def self.refresh
+  def self.refresh(concurrently: false)
     Scenic.database.refresh_materialized_view(
       table_name,
-      concurrently: false,
+      concurrently: concurrently,
       cascade: false
     )
   end
